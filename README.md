@@ -4,6 +4,13 @@ Rootless iOS tweak package source for `com.p2kdev.safariblocker`.
 
 SafariBlocker is a Safari focused jailbreak tweak for controlling unwanted new tabs, popups, domains, and specific URLs. It provides a PreferenceLoader settings panel where users can manage allow and block lists directly on device, add entries manually with a plus button popup, and back up or restore all lists with one JSON file.
 
+## Screenshots
+
+<p align="center">
+  <img src="IMG_4315.png" alt="SafariBlocker screenshot 1" width="280">
+  <img src="IMG_4316.png" alt="SafariBlocker screenshot 2" width="280">
+</p>
+
 ## Current package
 
 - Package: `com.p2kdev.safariblocker`
