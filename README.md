@@ -1,6 +1,6 @@
 # SafariBlocker
 
-Rootless iOS tweak package source for `com.p2kdev.safariblocker`.
+Rootless iOS tweak package source for `com.deerspotter.safariblocker`.
 
 SafariBlocker is a Safari focused jailbreak tweak for controlling unwanted new tabs, popups, domains, and specific URLs. It provides a PreferenceLoader settings panel where users can manage allow and block lists directly on device, add entries manually with a plus button popup, and back up or restore all lists with one JSON file.
 
@@ -13,13 +13,15 @@ SafariBlocker is a Safari focused jailbreak tweak for controlling unwanted new t
 
 ## Current package
 
-- Package: `com.p2kdev.safariblocker`
+- Package: `com.deerspotter.safariblocker`
 - Name: `SafariBlocker`
 - Version: `1.3.4`
 - Architecture: `iphoneos-arm64`
 - Minimum firmware: iOS 15.0
 - Install type: rootless jailbreak package
 - Dependencies: `mobilesubstrate`, `preferenceloader`, `firmware (>= 15.0)`
+- Maintainer: `DeerSpotter`
+- Author: `DeerSpotter`
 
 ## Main capabilities
 
@@ -60,9 +62,13 @@ Export creates one JSON backup file containing all three managed lists:
 
 ```json
 {
-  "allowedDomains": "example.com;trusted-site.com",
-  "blockedDomains": "bad-domain.com;ads.example",
-  "blockedURLs": "https://example.com/bad-page"
+  "format": "SafariBlockerListBackup",
+  "version": 1,
+  "lists": {
+    "allowedDomains": ["example.com", "trusted-site.com"],
+    "blockedDomains": ["bad-domain.com", "ads.example"],
+    "blockedURLs": ["https://example.com/bad-page"]
+  }
 }
 ```
 
@@ -78,6 +84,8 @@ Hosted page after GitHub Pages is enabled:
 
 [https://deerspotter.github.io/safariblocker/](https://deerspotter.github.io/safariblocker/)
 
+The editor starts with one simple **Import JSON** button. After a backup is imported, it expands into the editable lists.
+
 The editor can:
 
 - Import an existing SafariBlocker backup JSON file.
@@ -88,7 +96,6 @@ The editor can:
 - Swipe a row left on mobile to reveal **Delete**.
 - Delete entries from each list.
 - Sort each list.
-- Paste an existing backup JSON object directly into the page.
 - Copy the generated JSON.
 - Export a `SafariBlockerBackup_YYYY-MM-DD.json` file.
 
@@ -97,16 +104,17 @@ The editor is fully static and runs locally in the browser. No rules are uploade
 ### Rule editor workflow
 
 1. Open the GitHub Pages editor.
-2. Import an existing SafariBlocker backup JSON, paste a backup JSON object, or start from empty lists.
-3. Review the rendered rows for each category.
-4. Press **+** to add a single domain or URL.
-5. Press **Batch Paste** to paste many domains or URLs at once.
-6. Swipe left on a row and press **Delete** to remove an entry.
-7. Press **Copy List** to copy only that category as a plain newline list.
-8. Click **Export Backup JSON**.
-9. Move the JSON file to the jailbroken iPhone if it was created elsewhere.
-10. Open **Settings → SafariBlocker → Import List Backup**.
-11. Select the exported JSON file.
+2. Press **Import JSON**.
+3. Select an existing SafariBlocker backup JSON file.
+4. Review the rendered rows for each category.
+5. Press **+** to add a single domain or URL.
+6. Press **Batch Paste** to paste many domains or URLs at once.
+7. Swipe left on a row and press **Delete** to remove an entry.
+8. Press **Copy List** to copy only that category as a plain newline list.
+9. Click **Export Backup JSON**.
+10. Move the JSON file to the jailbroken iPhone if it was created elsewhere.
+11. Open **Settings → SafariBlocker → Import List Backup**.
+12. Select the exported JSON file.
 
 ### Enabling GitHub Pages
 
@@ -139,7 +147,7 @@ The PreferenceLoader panel currently includes:
   - **Export List Backup**
   - **Import List Backup**
 - **Support**
-  - **Follow me on Twitter @p2kdev**
+  - **Open DeerSpotter GitHub**
 
 ## Repository layout
 
@@ -203,7 +211,7 @@ To build from GitHub:
 The expected package name follows the version in `package/DEBIAN/control`, for example:
 
 ```text
-com.p2kdev.safariblocker_v1.3.4_iphoneos-arm64.deb
+com.deerspotter.safariblocker_v1.3.4_iphoneos-arm64.deb
 ```
 
 ## Building locally
@@ -217,7 +225,7 @@ scripts/rebuild-binaries.sh package
 mkdir -p dist
 PACKAGE_VERSION="$(awk '/^Version:/ { print $2 }' package/DEBIAN/control)"
 PACKAGE_ARCH="$(awk '/^Architecture:/ { print $2 }' package/DEBIAN/control)"
-dpkg-deb --root-owner-group --build package "dist/com.p2kdev.safariblocker_v${PACKAGE_VERSION}_${PACKAGE_ARCH}.deb"
+dpkg-deb --root-owner-group --build package "dist/com.deerspotter.safariblocker_v${PACKAGE_VERSION}_${PACKAGE_ARCH}.deb"
 sha256sum dist/*.deb
 ```
 
@@ -237,11 +245,9 @@ package/var/jb/Library/PreferenceBundles/SafariBlocker.bundle/SafariBlocker
 
 ## Notes
 
-This repository was originally populated from the extracted `com.p2kdev.safariblocker_v1.3.1_iphoneos-arm64.deb` package. The current repository keeps the original rootless package payload structure and adds a rebuilt Settings bundle source under `prefs/` for the enhanced list management, plus-popup entry, backup/restore features, and the `docs/` GitHub Pages rule editor.
+This repository was populated from an extracted rootless SafariBlocker package. The current repository keeps the rootless package payload structure and adds a rebuilt Settings bundle source under `prefs/` for the enhanced list management, plus-popup entry, backup/restore features, and the `docs/` GitHub Pages rule editor.
 
 ## Credits
 
-Original package metadata credits:
-
-- Maintainer: `P2KDev <p2kdev@gmail.com>`
-- Author: `P2KDev <p2kdev@gmail.com>`
+- Maintainer: `DeerSpotter`
+- Author: `DeerSpotter`
