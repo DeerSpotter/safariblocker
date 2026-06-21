@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SafariBlocker Rule Editor</title>
+  <meta name="description" content="Build, import, export, and validate SafariBlocker rule backup JSON files.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <p class="eyebrow">SafariBlocker</p>
+      <h1>Rule Backup Editor</h1>
+      <p class="subtitle">Build whitelist and blocklist backups in your browser, then import the JSON file from the SafariBlocker Settings panel.</p>
+    </div>
+    <div class="hero-card" aria-label="Backup summary">
+      <span class="summary-label">Backup format</span>
+      <strong>allowedDomains</strong>
+      <strong>blockedDomains</strong>
+      <strong>blockedURLs</strong>
+    </div>
+  </header>
+
+  <main>
+    <section class="notice">
+      <h2>How to use</h2>
+      <ol>
+        <li>Add domains or URLs below.</li>
+        <li>Click <strong>Export Backup JSON</strong>.</li>
+        <li>Move the file to your iPhone if needed.</li>
+        <li>Open <strong>Settings → SafariBlocker → Import List Backup</strong> and select the file.</li>
+      </ol>
+    </section>
+
+    <section class="toolbar" aria-label="Backup actions">
+      <label class="file-button">
+        Import Backup JSON
+        <input id="fileImport" type="file" accept="application/json,.json">
+      </label>
+      <button id="exportBtn" type="button">Export Backup JSON</button>
+      <button id="copyBtn" type="button">Copy JSON</button>
+      <button id="clearBtn" class="danger" type="button">Clear All</button>
+    </section>
+
+    <section class="grid" aria-label="Rule lists">
+      <article class="panel" data-list="allowedDomains">
+        <div class="panel-header">
+          <div>
+            <h2>Whitelisted Domains</h2>
+            <p>Domains that should stay allowed.</p>
+          </div>
+          <span class="count" id="allowedDomainsCount">0</span>
+        </div>
+        <textarea id="allowedDomainsInput" placeholder="example.com&#10;trusted.example.org"></textarea>
+        <div class="row-actions">
+          <button type="button" data-add="allowedDomains">Add to Whitelist</button>
+          <button type="button" data-sort="allowedDomains">Sort</button>
+        </div>
+        <div class="chips" id="allowedDomainsList" aria-live="polite"></div>
+      </article>
+
+      <article class="panel" data-list="blockedDomains">
+        <div class="panel-header">
+          <div>
+            <h2>Blocked Domains</h2>
+            <p>Domains that should be blocked.</p>
+          </div>
+          <span class="count" id="blockedDomainsCount">0</span>
+        </div>
+        <textarea id="blockedDomainsInput" placeholder="ads.example.com&#10;bad-domain.example"></textarea>
+        <div class="row-actions">
+          <button type="button" data-add="blockedDomains">Add to Blocked Domains</button>
+          <button type="button" data-sort="blockedDomains">Sort</button>
+        </div>
+        <div class="chips" id="blockedDomainsList" aria-live="polite"></div>
+      </article>
+
+      <article class="panel" data-list="blockedURLs">
+        <div class="panel-header">
+          <div>
+            <h2>Blocked URLs</h2>
+            <p>Specific full URLs that should be blocked.</p>
+          </div>
+          <span class="count" id="blockedURLsCount">0</span>
+        </div>
+        <textarea id="blockedURLsInput" placeholder="https://example.com/bad-page&#10;https://example.org/path"></textarea>
+        <div class="row-actions">
+          <button type="button" data-add="blockedURLs">Add to Blocked URLs</button>
+          <button type="button" data-sort="blockedURLs">Sort</button>
+        </div>
+        <div class="chips" id="blockedURLsList" aria-live="polite"></div>
+      </article>
+    </section>
+
+    <section class="json-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Backup JSON Preview</h2>
+          <p>This is the file format SafariBlocker imports and exports.</p>
+        </div>
+        <button id="refreshPreviewBtn" type="button">Refresh</button>
+      </div>
+      <pre id="jsonPreview" tabindex="0"></pre>
+    </section>
+
+    <section class="json-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Paste Existing Backup</h2>
+          <p>Paste a SafariBlocker JSON backup here to load it without using a file picker.</p>
+        </div>
+      </div>
+      <textarea id="pasteImport" class="json-input" placeholder='{ "allowedDomains": "example.com", "blockedDomains": "ads.example", "blockedURLs": "https://example.com/page" }'></textarea>
+      <div class="row-actions">
+        <button id="loadPastedBtn" type="button">Load Pasted JSON</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Local browser tool. Nothing is uploaded anywhere. Exported files are plain JSON backups for SafariBlocker.</p>
+  </footer>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
