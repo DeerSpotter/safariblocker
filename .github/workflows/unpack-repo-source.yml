@@ -1,0 +1,54 @@
+name: Unpack Repo Source Zip
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - safariblocker_repo_source_with_workflow.zip
+      - .github/workflows/unpack-repo-source.yml
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Unpack prepared source zip
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="safariblocker_repo_source_with_workflow.zip"
+          if [ ! -f "$ZIP" ]; then
+            echo "Missing $ZIP"
+            exit 1
+          fi
+
+          rm -rf .unpack_repo_source
+          mkdir .unpack_repo_source
+          unzip -o "$ZIP" -d .unpack_repo_source
+
+          shopt -s dotglob
+          cp -R .unpack_repo_source/* ./
+          rm -rf .unpack_repo_source
+
+          chmod +x scripts/rebuild-binaries.sh || true
+
+      - name: Commit unpacked files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          if git diff --cached --quiet; then
+            echo "No extracted changes to commit."
+            exit 0
+          fi
+          git commit -m "Unpack SafariBlocker source package"
+          git push
