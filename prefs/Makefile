@@ -9,6 +9,6 @@ SafariBlocker_FILES = TBRootListController.m
 SafariBlocker_FRAMEWORKS = UIKit CoreFoundation
 SafariBlocker_PRIVATE_FRAMEWORKS = Preferences
 SafariBlocker_INSTALL_PATH = /Library/PreferenceBundles
-SafariBlocker_CFLAGS = -fobjc-arc
+SafariBlocker_CFLAGS = -fobjc-arc -Wno-deprecated-declarations
 
 include $(THEOS_MAKE_PATH)/bundle.mk
