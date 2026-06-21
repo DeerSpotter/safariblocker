@@ -12,7 +12,7 @@
     <div>
       <p class="eyebrow">SafariBlocker</p>
       <h1>Rule Backup Editor</h1>
-      <p class="subtitle">Build whitelist and blocklist backups in your browser, then import the JSON file from the SafariBlocker Settings panel.</p>
+      <p class="subtitle">Import a SafariBlocker backup, review every rule as an editable row, swipe left to delete, add single entries with a plus popup, or paste whole batch lists.</p>
     </div>
     <div class="hero-card" aria-label="Backup summary">
       <span class="summary-label">Backup format</span>
@@ -26,10 +26,11 @@
     <section class="notice">
       <h2>How to use</h2>
       <ol>
-        <li>Add domains or URLs below.</li>
-        <li>Click <strong>Export Backup JSON</strong>.</li>
-        <li>Move the file to your iPhone if needed.</li>
-        <li>Open <strong>Settings → SafariBlocker → Import List Backup</strong> and select the file.</li>
+        <li>Import a SafariBlocker backup JSON or add rules below.</li>
+        <li>Use the <strong>+</strong> buttons for quick single entries.</li>
+        <li>Use <strong>Batch Paste</strong> to paste newline or semicolon separated lists.</li>
+        <li>Swipe a row left to reveal <strong>Delete</strong>.</li>
+        <li>Export the backup JSON and import it from <strong>Settings → SafariBlocker → Import List Backup</strong>.</li>
       </ol>
     </section>
 
@@ -52,12 +53,13 @@
           </div>
           <span class="count" id="allowedDomainsCount">0</span>
         </div>
-        <textarea id="allowedDomainsInput" placeholder="example.com&#10;trusted.example.org"></textarea>
-        <div class="row-actions">
-          <button type="button" data-add="allowedDomains">Add to Whitelist</button>
+        <div class="row-actions compact-actions">
+          <button class="icon-button" type="button" data-open-add="allowedDomains" aria-label="Add whitelisted domain">+</button>
+          <button type="button" data-open-batch="allowedDomains">Batch Paste</button>
+          <button type="button" data-copy-list="allowedDomains">Copy List</button>
           <button type="button" data-sort="allowedDomains">Sort</button>
         </div>
-        <div class="chips" id="allowedDomainsList" aria-live="polite"></div>
+        <div class="list-rows" id="allowedDomainsList" aria-live="polite"></div>
       </article>
 
       <article class="panel" data-list="blockedDomains">
@@ -68,12 +70,13 @@
           </div>
           <span class="count" id="blockedDomainsCount">0</span>
         </div>
-        <textarea id="blockedDomainsInput" placeholder="ads.example.com&#10;bad-domain.example"></textarea>
-        <div class="row-actions">
-          <button type="button" data-add="blockedDomains">Add to Blocked Domains</button>
+        <div class="row-actions compact-actions">
+          <button class="icon-button" type="button" data-open-add="blockedDomains" aria-label="Add blocked domain">+</button>
+          <button type="button" data-open-batch="blockedDomains">Batch Paste</button>
+          <button type="button" data-copy-list="blockedDomains">Copy List</button>
           <button type="button" data-sort="blockedDomains">Sort</button>
         </div>
-        <div class="chips" id="blockedDomainsList" aria-live="polite"></div>
+        <div class="list-rows" id="blockedDomainsList" aria-live="polite"></div>
       </article>
 
       <article class="panel" data-list="blockedURLs">
@@ -84,12 +87,13 @@
           </div>
           <span class="count" id="blockedURLsCount">0</span>
         </div>
-        <textarea id="blockedURLsInput" placeholder="https://example.com/bad-page&#10;https://example.org/path"></textarea>
-        <div class="row-actions">
-          <button type="button" data-add="blockedURLs">Add to Blocked URLs</button>
+        <div class="row-actions compact-actions">
+          <button class="icon-button" type="button" data-open-add="blockedURLs" aria-label="Add blocked URL">+</button>
+          <button type="button" data-open-batch="blockedURLs">Batch Paste</button>
+          <button type="button" data-copy-list="blockedURLs">Copy List</button>
           <button type="button" data-sort="blockedURLs">Sort</button>
         </div>
-        <div class="chips" id="blockedURLsList" aria-live="polite"></div>
+        <div class="list-rows" id="blockedURLsList" aria-live="polite"></div>
       </article>
     </section>
 
@@ -121,6 +125,30 @@
   <footer>
     <p>Local browser tool. Nothing is uploaded anywhere. Exported files are plain JSON backups for SafariBlocker.</p>
   </footer>
+
+  <div id="modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow modal-eyebrow">SafariBlocker</p>
+          <h2 id="modalTitle">Add Entry</h2>
+          <p id="modalHelp">Enter one item and submit.</p>
+        </div>
+      </div>
+      <label id="singleField" class="field">
+        <span id="singleLabel">Entry</span>
+        <input id="modalInput" type="text" autocomplete="off" autocapitalize="none" spellcheck="false">
+      </label>
+      <label id="batchField" class="field" hidden>
+        <span id="batchLabel">Batch entries</span>
+        <textarea id="modalBatch" spellcheck="false"></textarea>
+      </label>
+      <div class="modal-actions">
+        <button id="modalCancel" type="button">Cancel</button>
+        <button id="modalSubmit" type="button">Submit</button>
+      </div>
+    </div>
+  </div>
 
   <div id="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>
