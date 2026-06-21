@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>SafariBlocker</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.p2kdev.safariblocker</string>
+	<string>com.deerspotter.safariblocker</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.0.0</string>
 	<key>CFBundleSignature</key>
-	<string>????</string>
+	<string>SBKR</string>
 	<key>CFBundleVersion</key>
 	<string>1.0</string>
 	<key>NSPrincipalClass</key>
