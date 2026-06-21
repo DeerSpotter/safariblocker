@@ -112,12 +112,12 @@
 		</dict>
 
 		<dict>
-			<key>action</key>
-			<string>visitTwitter</string>
 			<key>cell</key>
-			<string>PSButtonCell</string>
+			<string>PSLinkCell</string>
 			<key>label</key>
 			<string>Open DeerSpotter GitHub</string>
+			<key>url</key>
+			<string>https://github.com/DeerSpotter/safariblocker</string>
 		</dict>
 
 		<dict>
