@@ -1,5 +1,6 @@
 const LIST_KEYS = ["allowedDomains", "blockedDomains", "blockedURLs"];
 const STORAGE_KEY = "safariblocker-rule-editor-state";
+const DELETE_REVEAL_PX = 96;
 
 const state = {
   allowedDomains: [],
@@ -7,10 +8,25 @@ const state = {
   blockedURLs: []
 };
 
-const labels = {
-  allowedDomains: "whitelisted domain",
-  blockedDomains: "blocked domain",
-  blockedURLs: "blocked URL"
+const listMeta = {
+  allowedDomains: {
+    title: "Whitelisted Domain",
+    plural: "whitelisted domains",
+    singular: "whitelisted domain",
+    placeholder: "example.com"
+  },
+  blockedDomains: {
+    title: "Blocked Domain",
+    plural: "blocked domains",
+    singular: "blocked domain",
+    placeholder: "ads.example.com"
+  },
+  blockedURLs: {
+    title: "Blocked URL",
+    plural: "blocked URLs",
+    singular: "blocked URL",
+    placeholder: "https://example.com/bad-page"
+  }
 };
 
 const elements = {
@@ -22,7 +38,23 @@ const elements = {
   loadPastedBtn: document.getElementById("loadPastedBtn"),
   pasteImport: document.getElementById("pasteImport"),
   jsonPreview: document.getElementById("jsonPreview"),
-  toast: document.getElementById("toast")
+  toast: document.getElementById("toast"),
+  modal: document.getElementById("modal"),
+  modalTitle: document.getElementById("modalTitle"),
+  modalHelp: document.getElementById("modalHelp"),
+  singleField: document.getElementById("singleField"),
+  batchField: document.getElementById("batchField"),
+  singleLabel: document.getElementById("singleLabel"),
+  batchLabel: document.getElementById("batchLabel"),
+  modalInput: document.getElementById("modalInput"),
+  modalBatch: document.getElementById("modalBatch"),
+  modalCancel: document.getElementById("modalCancel"),
+  modalSubmit: document.getElementById("modalSubmit")
+};
+
+const modalState = {
+  key: null,
+  mode: "single"
 };
 
 function splitList(value) {
@@ -141,6 +173,8 @@ function loadLocal() {
 }
 
 function render() {
+  closeRevealedRows();
+
   for (const key of LIST_KEYS) {
     const list = document.getElementById(`${key}List`);
     const count = document.getElementById(`${key}Count`);
@@ -150,61 +184,228 @@ function render() {
     if (state[key].length === 0) {
       const empty = document.createElement("p");
       empty.className = "empty";
-      empty.textContent = `No ${labels[key]} entries yet.`;
+      empty.textContent = `No ${listMeta[key].singular} entries yet.`;
       list.appendChild(empty);
       continue;
     }
 
     state[key].forEach((item, index) => {
-      const chip = document.createElement("div");
-      chip.className = "chip";
-
-      const code = document.createElement("code");
-      code.textContent = item;
-
-      const remove = document.createElement("button");
-      remove.type = "button";
-      remove.textContent = "Delete";
-      remove.setAttribute("aria-label", `Delete ${item}`);
-      remove.addEventListener("click", () => {
-        state[key].splice(index, 1);
-        saveLocal();
-        render();
-        showToast(`Deleted ${item}`);
-      });
-
-      chip.append(code, remove);
-      list.appendChild(chip);
+      list.appendChild(createRuleRow(key, item, index));
     });
   }
 
   elements.jsonPreview.textContent = backupJSON();
 }
 
-function addEntries(key) {
-  const input = document.getElementById(`${key}Input`);
-  const entries = parseEntries(input.value, key);
+function createRuleRow(key, item, index) {
+  const row = document.createElement("div");
+  row.className = "rule-row";
+  row.dataset.key = key;
+  row.dataset.index = String(index);
+
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.className = "row-delete";
+  deleteButton.textContent = "Delete";
+  deleteButton.setAttribute("aria-label", `Delete ${item}`);
+  deleteButton.addEventListener("click", () => deleteEntry(key, index, item));
+
+  const foreground = document.createElement("div");
+  foreground.className = "row-foreground";
+  foreground.tabIndex = 0;
+
+  const code = document.createElement("code");
+  code.textContent = item;
+
+  const hint = document.createElement("span");
+  hint.className = "swipe-hint";
+  hint.textContent = "Swipe left";
+
+  foreground.append(code, hint);
+  row.append(deleteButton, foreground);
+  attachSwipe(row, foreground);
+
+  foreground.addEventListener("keydown", event => {
+    if (event.key === "Delete" || event.key === "Backspace") {
+      deleteEntry(key, index, item);
+    }
+
+    if (event.key === "Escape") {
+      row.classList.remove("revealed");
+    }
+  });
+
+  return row;
+}
+
+function deleteEntry(key, index, item) {
+  state[key].splice(index, 1);
+  saveLocal();
+  render();
+  showToast(`Deleted ${item}`);
+}
+
+function attachSwipe(row, foreground) {
+  let startX = 0;
+  let startY = 0;
+  let currentX = 0;
+  let dragging = false;
+  let horizontal = false;
+
+  foreground.addEventListener("pointerdown", event => {
+    if (event.button !== undefined && event.button !== 0) {
+      return;
+    }
+
+    closeRevealedRows(row);
+    startX = event.clientX;
+    startY = event.clientY;
+    currentX = row.classList.contains("revealed") ? -DELETE_REVEAL_PX : 0;
+    dragging = true;
+    horizontal = false;
+    foreground.setPointerCapture?.(event.pointerId);
+  });
+
+  foreground.addEventListener("pointermove", event => {
+    if (!dragging) {
+      return;
+    }
+
+    const deltaX = event.clientX - startX;
+    const deltaY = event.clientY - startY;
+
+    if (!horizontal && Math.abs(deltaY) > Math.abs(deltaX) + 8) {
+      return;
+    }
+
+    if (Math.abs(deltaX) > 8) {
+      horizontal = true;
+    }
+
+    if (!horizontal) {
+      return;
+    }
+
+    const next = Math.max(-DELETE_REVEAL_PX, Math.min(0, currentX + deltaX));
+    foreground.style.transform = `translateX(${next}px)`;
+  });
+
+  foreground.addEventListener("pointerup", event => {
+    if (!dragging) {
+      return;
+    }
+
+    const deltaX = event.clientX - startX;
+    dragging = false;
+    foreground.style.transform = "";
+
+    if (currentX + deltaX < -DELETE_REVEAL_PX / 2) {
+      row.classList.add("revealed");
+    } else {
+      row.classList.remove("revealed");
+    }
+  });
+
+  foreground.addEventListener("pointercancel", () => {
+    dragging = false;
+    foreground.style.transform = "";
+  });
+
+  foreground.addEventListener("click", () => {
+    if (row.classList.contains("revealed")) {
+      row.classList.remove("revealed");
+    }
+  });
+}
+
+function closeRevealedRows(exceptRow = null) {
+  document.querySelectorAll(".rule-row.revealed").forEach(row => {
+    if (row !== exceptRow) {
+      row.classList.remove("revealed");
+    }
+  });
+}
+
+function addEntries(key, raw) {
+  const entries = parseEntries(raw, key);
 
   if (entries.length === 0) {
-    showToast(`Enter at least one ${labels[key]}.`);
-    return;
+    showToast(`Enter at least one ${listMeta[key].singular}.`);
+    return false;
   }
 
   const before = state[key].length;
   state[key] = unique([...state[key], ...entries]);
   const added = state[key].length - before;
 
-  input.value = "";
   saveLocal();
   render();
   showToast(added === 0 ? "No new entries added. They were already present." : `Added ${added} entr${added === 1 ? "y" : "ies"}.`);
+  return added > 0;
 }
 
 function sortList(key) {
   state[key].sort((a, b) => a.localeCompare(b));
   saveLocal();
   render();
-  showToast(`Sorted ${labels[key]} list.`);
+  showToast(`Sorted ${listMeta[key].plural}.`);
+}
+
+function openAddModal(key) {
+  modalState.key = key;
+  modalState.mode = "single";
+  const meta = listMeta[key];
+
+  elements.modalTitle.textContent = `Add ${meta.title}`;
+  elements.modalHelp.textContent = "Enter one item. Submit saves it to this list, Cancel closes without saving.";
+  elements.singleLabel.textContent = meta.title;
+  elements.modalInput.placeholder = meta.placeholder;
+  elements.modalInput.value = "";
+  elements.modalBatch.value = "";
+  elements.singleField.hidden = false;
+  elements.batchField.hidden = true;
+  elements.modal.hidden = false;
+  elements.modalInput.focus();
+}
+
+function openBatchModal(key) {
+  modalState.key = key;
+  modalState.mode = "batch";
+  const meta = listMeta[key];
+
+  elements.modalTitle.textContent = `Batch Paste ${meta.plural}`;
+  elements.modalHelp.textContent = "Paste one item per line, or separate items with semicolons. Submit appends only new entries.";
+  elements.batchLabel.textContent = `Paste ${meta.plural}`;
+  elements.modalBatch.placeholder = key === "blockedURLs"
+    ? "https://example.com/bad-page\nhttps://example.org/another-page"
+    : "example.com\n*.example.org\nsubdomain.example.net";
+  elements.modalInput.value = "";
+  elements.modalBatch.value = "";
+  elements.singleField.hidden = true;
+  elements.batchField.hidden = false;
+  elements.modal.hidden = false;
+  elements.modalBatch.focus();
+}
+
+function submitModal() {
+  const key = modalState.key;
+  if (!key) {
+    closeModal();
+    return;
+  }
+
+  const raw = modalState.mode === "batch" ? elements.modalBatch.value : elements.modalInput.value;
+  const success = addEntries(key, raw);
+
+  if (success || parseEntries(raw, key).length > 0) {
+    closeModal();
+  }
+}
+
+function closeModal() {
+  elements.modal.hidden = true;
+  modalState.key = null;
+  modalState.mode = "single";
 }
 
 function exportBackup() {
@@ -222,14 +423,35 @@ function exportBackup() {
   showToast("Exported SafariBlocker backup JSON.");
 }
 
-async function copyBackup() {
+async function copyText(text, successMessage) {
   try {
-    await navigator.clipboard.writeText(backupJSON());
-    showToast("Copied backup JSON.");
+    await navigator.clipboard.writeText(text);
+    showToast(successMessage);
   } catch {
-    elements.jsonPreview.focus();
-    showToast("Copy failed. Select the preview and copy manually.");
+    const temp = document.createElement("textarea");
+    temp.value = text;
+    temp.setAttribute("readonly", "readonly");
+    temp.style.position = "fixed";
+    temp.style.opacity = "0";
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    temp.remove();
+    showToast(successMessage);
   }
+}
+
+function copyBackup() {
+  copyText(backupJSON(), "Copied backup JSON.");
+}
+
+function copyList(key) {
+  if (state[key].length === 0) {
+    showToast(`No ${listMeta[key].plural} to copy.`);
+    return;
+  }
+
+  copyText(state[key].join("\n"), `Copied ${listMeta[key].plural}.`);
 }
 
 async function importFile(file) {
@@ -244,6 +466,8 @@ async function importFile(file) {
     showToast(`Imported ${file.name}.`);
   } catch (error) {
     showToast(`Import failed: ${error.message}`);
+  } finally {
+    elements.fileImport.value = "";
   }
 }
 
@@ -289,8 +513,16 @@ function showToast(message) {
   toastTimer = setTimeout(() => elements.toast.classList.remove("show"), 2600);
 }
 
-for (const button of document.querySelectorAll("[data-add]")) {
-  button.addEventListener("click", () => addEntries(button.dataset.add));
+for (const button of document.querySelectorAll("[data-open-add]")) {
+  button.addEventListener("click", () => openAddModal(button.dataset.openAdd));
+}
+
+for (const button of document.querySelectorAll("[data-open-batch]")) {
+  button.addEventListener("click", () => openBatchModal(button.dataset.openBatch));
+}
+
+for (const button of document.querySelectorAll("[data-copy-list]")) {
+  button.addEventListener("click", () => copyList(button.dataset.copyList));
 }
 
 for (const button of document.querySelectorAll("[data-sort]")) {
@@ -303,5 +535,27 @@ elements.clearBtn.addEventListener("click", clearAll);
 elements.refreshPreviewBtn.addEventListener("click", render);
 elements.loadPastedBtn.addEventListener("click", loadPastedJSON);
 elements.fileImport.addEventListener("change", event => importFile(event.target.files?.[0]));
+elements.modalCancel.addEventListener("click", closeModal);
+elements.modalSubmit.addEventListener("click", submitModal);
+elements.modal.addEventListener("click", event => {
+  if (event.target === elements.modal) {
+    closeModal();
+  }
+});
+elements.modalInput.addEventListener("keydown", event => {
+  if (event.key === "Enter") {
+    submitModal();
+  }
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !elements.modal.hidden) {
+    closeModal();
+  }
+});
+document.addEventListener("click", event => {
+  if (!event.target.closest(".rule-row")) {
+    closeRevealedRows();
+  }
+});
 
 loadLocal();
