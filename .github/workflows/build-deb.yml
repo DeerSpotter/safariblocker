@@ -43,20 +43,20 @@ jobs:
           for sdk in "$HOME"/theos/sdks/iPhoneOS*.sdk; do
             framework_dir="$sdk/System/Library/PrivateFrameworks/Preferences.framework"
             mkdir -p "$framework_dir"
-            cat > "$framework_dir/Preferences.tbd" <<'EOF'
---- !tapi-tbd
-            tbd-version: 4
-            targets: [ arm64-ios, arm64e-ios ]
-            install-name: /System/Library/PrivateFrameworks/Preferences.framework/Preferences
-            exports:
-              - targets: [ arm64-ios, arm64e-ios ]
-                symbols:
-                  - _OBJC_CLASS_$_PSListController
-                  - _OBJC_METACLASS_$_PSListController
-                  - _OBJC_CLASS_$_PSSpecifier
-                  - _OBJC_METACLASS_$_PSSpecifier
-...
-EOF
+            {
+              printf '%s\n' '--- !tapi-tbd'
+              printf '%s\n' 'tbd-version: 4'
+              printf '%s\n' 'targets: [ arm64-ios, arm64e-ios ]'
+              printf '%s\n' 'install-name: /System/Library/PrivateFrameworks/Preferences.framework/Preferences'
+              printf '%s\n' 'exports:'
+              printf '%s\n' '  - targets: [ arm64-ios, arm64e-ios ]'
+              printf '%s\n' '    symbols:'
+              printf '%s\n' '      - _OBJC_CLASS_$_PSListController'
+              printf '%s\n' '      - _OBJC_METACLASS_$_PSListController'
+              printf '%s\n' '      - _OBJC_CLASS_$_PSSpecifier'
+              printf '%s\n' '      - _OBJC_METACLASS_$_PSSpecifier'
+              printf '%s\n' '...'
+            } > "$framework_dir/Preferences.tbd"
           done
           find "$HOME/theos/sdks" -path '*/Preferences.framework/Preferences.tbd' -print
 
