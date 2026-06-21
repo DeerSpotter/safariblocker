@@ -30,11 +30,15 @@ const listMeta = {
 };
 
 const elements = {
+  startScreen: document.getElementById("startScreen"),
+  editorScreen: document.getElementById("editorScreen"),
   fileImport: document.getElementById("fileImport"),
+  fileImportAgain: document.getElementById("fileImportAgain"),
+  importStatus: document.getElementById("importStatus"),
+  summaryText: document.getElementById("summaryText"),
   exportBtn: document.getElementById("exportBtn"),
   copyBtn: document.getElementById("copyBtn"),
   clearBtn: document.getElementById("clearBtn"),
-  refreshPreviewBtn: document.getElementById("refreshPreviewBtn"),
   loadPastedBtn: document.getElementById("loadPastedBtn"),
   pasteImport: document.getElementById("pasteImport"),
   jsonPreview: document.getElementById("jsonPreview"),
@@ -95,8 +99,6 @@ function normalizeDomain(value) {
     return "";
   }
 
-  item = item.replace(/^\s+|\s+$/g, "");
-
   const isWildcard = item.startsWith("*.");
 
   try {
@@ -138,21 +140,46 @@ function parseEntries(raw, key) {
   );
 }
 
+function getBackupLists(data) {
+  if (data && typeof data === "object" && data.lists && typeof data.lists === "object") {
+    return data.lists;
+  }
+
+  return data || {};
+}
+
+function countStateEntries() {
+  return LIST_KEYS.reduce((total, key) => total + state[key].length, 0);
+}
+
 function toBackupObject() {
   return {
-    allowedDomains: state.allowedDomains.join(";"),
-    blockedDomains: state.blockedDomains.join(";"),
-    blockedURLs: state.blockedURLs.join(";")
+    format: "SafariBlockerListBackup",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    lists: {
+      allowedDomains: state.allowedDomains,
+      blockedDomains: state.blockedDomains,
+      blockedURLs: state.blockedURLs
+    }
   };
 }
 
-function loadBackupObject(data) {
+function loadBackupObject(data, sourceName = "backup") {
+  const lists = getBackupLists(data);
+
   for (const key of LIST_KEYS) {
-    state[key] = unique(splitList(data?.[key]).map(value => normalizeForKey(key, value)).filter(Boolean));
+    state[key] = unique(splitList(lists?.[key]).map(value => normalizeForKey(key, value)).filter(Boolean));
   }
 
   saveLocal();
   render();
+  showEditor();
+
+  const total = countStateEntries();
+  const message = `Loaded ${total} total item${total === 1 ? "" : "s"} from ${sourceName}.`;
+  elements.importStatus.textContent = message;
+  showToast(message);
 }
 
 function backupJSON() {
@@ -160,16 +187,37 @@ function backupJSON() {
 }
 
 function saveLocal() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(toBackupObject()));
 }
 
 function loadLocal() {
   try {
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-    loadBackupObject(stored);
+    const lists = getBackupLists(stored);
+    const hasAnyList = LIST_KEYS.some(key => splitList(lists?.[key]).length > 0);
+
+    if (hasAnyList) {
+      for (const key of LIST_KEYS) {
+        state[key] = unique(splitList(lists?.[key]).map(value => normalizeForKey(key, value)).filter(Boolean));
+      }
+      render();
+      return;
+    }
   } catch {
-    render();
+    // Start clean if stored data is damaged.
   }
+
+  render();
+}
+
+function showEditor() {
+  elements.startScreen.hidden = true;
+  elements.editorScreen.hidden = false;
+}
+
+function updateSummary() {
+  const parts = LIST_KEYS.map(key => `${state[key].length} ${listMeta[key].plural}`);
+  elements.summaryText.textContent = `Loaded ${parts.join(", ")}.`;
 }
 
 function render() {
@@ -184,7 +232,7 @@ function render() {
     if (state[key].length === 0) {
       const empty = document.createElement("p");
       empty.className = "empty";
-      empty.textContent = `No ${listMeta[key].singular} entries yet.`;
+      empty.textContent = `No ${listMeta[key].singular} entries.`;
       list.appendChild(empty);
       continue;
     }
@@ -194,6 +242,7 @@ function render() {
     });
   }
 
+  updateSummary();
   elements.jsonPreview.textContent = backupJSON();
 }
 
@@ -454,29 +503,43 @@ function copyList(key) {
   copyText(state[key].join("\n"), `Copied ${listMeta[key].plural}.`);
 }
 
+function readFileText(file) {
+  if (file.text) {
+    return file.text();
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error || new Error("Unable to read file."));
+    reader.readAsText(file);
+  });
+}
+
 async function importFile(file) {
   if (!file) {
     return;
   }
 
   try {
-    const text = await file.text();
+    const text = await readFileText(file);
     const data = JSON.parse(text);
-    loadBackupObject(data);
-    showToast(`Imported ${file.name}.`);
+    loadBackupObject(data, file.name || "selected file");
   } catch (error) {
-    showToast(`Import failed: ${error.message}`);
+    const message = `Import failed: ${error.message}`;
+    elements.importStatus.textContent = message;
+    showToast(message);
   } finally {
     elements.fileImport.value = "";
+    elements.fileImportAgain.value = "";
   }
 }
 
 function loadPastedJSON() {
   try {
     const data = JSON.parse(elements.pasteImport.value);
-    loadBackupObject(data);
+    loadBackupObject(data, "pasted JSON");
     elements.pasteImport.value = "";
-    showToast("Loaded pasted backup JSON.");
   } catch (error) {
     showToast(`Paste import failed: ${error.message}`);
   }
@@ -510,7 +573,7 @@ function showToast(message) {
   elements.toast.textContent = message;
   elements.toast.classList.add("show");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => elements.toast.classList.remove("show"), 2600);
+  toastTimer = setTimeout(() => elements.toast.classList.remove("show"), 2800);
 }
 
 for (const button of document.querySelectorAll("[data-open-add]")) {
@@ -532,9 +595,9 @@ for (const button of document.querySelectorAll("[data-sort]")) {
 elements.exportBtn.addEventListener("click", exportBackup);
 elements.copyBtn.addEventListener("click", copyBackup);
 elements.clearBtn.addEventListener("click", clearAll);
-elements.refreshPreviewBtn.addEventListener("click", render);
 elements.loadPastedBtn.addEventListener("click", loadPastedJSON);
 elements.fileImport.addEventListener("change", event => importFile(event.target.files?.[0]));
+elements.fileImportAgain.addEventListener("change", event => importFile(event.target.files?.[0]));
 elements.modalCancel.addEventListener("click", closeModal);
 elements.modalSubmit.addEventListener("click", submitModal);
 elements.modal.addEventListener("click", event => {
