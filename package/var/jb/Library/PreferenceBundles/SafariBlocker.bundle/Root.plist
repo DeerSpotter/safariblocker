@@ -108,12 +108,12 @@
 			<key>label</key>
 			<string>Support</string>
 			<key>footerText</key>
-			<string>Open the DeerSpotter GitHub profile for project updates and related tools.</string>
+			<string>DeerSpotter project links and updates.</string>
 		</dict>
 
 		<dict>
 			<key>action</key>
-			<string>visitDeerSpotter</string>
+			<string>visitTwitter</string>
 			<key>cell</key>
 			<string>PSButtonCell</string>
 			<key>label</key>
