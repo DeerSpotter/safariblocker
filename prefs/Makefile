@@ -5,7 +5,7 @@ THEOS_PACKAGE_SCHEME = rootless
 include $(THEOS)/makefiles/common.mk
 
 BUNDLE_NAME = SafariBlocker
-SafariBlocker_FILES = TBRootListController.m
+SafariBlocker_FILES = TBRootListController.m TBRootListController+RepoLink.xm
 SafariBlocker_FRAMEWORKS = UIKit CoreFoundation
 SafariBlocker_PRIVATE_FRAMEWORKS = Preferences
 SafariBlocker_INSTALL_PATH = /Library/PreferenceBundles
