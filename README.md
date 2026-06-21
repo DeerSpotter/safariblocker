@@ -63,6 +63,53 @@ The export action opens the iOS share sheet so the backup can be saved to Files,
 
 Import opens the iOS document picker, reads a selected SafariBlocker JSON backup file, restores the three list values, posts the settings changed notification, reloads the Settings UI, and displays an import summary.
 
+## GitHub Pages rule editor
+
+This repository includes a browser based rule editor in `docs/`. It lets users build the same SafariBlocker backup JSON format without editing JSON by hand.
+
+Hosted page after GitHub Pages is enabled:
+
+[https://deerspotter.github.io/safariblocker/](https://deerspotter.github.io/safariblocker/)
+
+The editor can:
+
+- Add whitelisted domains.
+- Add blocked domains.
+- Add blocked full URLs.
+- Import an existing SafariBlocker backup JSON file.
+- Paste an existing backup JSON object directly into the page.
+- Delete entries from each list.
+- Sort each list.
+- Copy the generated JSON.
+- Export a `SafariBlockerBackup_YYYY-MM-DD.json` file.
+
+The editor is fully static and runs locally in the browser. No rules are uploaded to a server.
+
+### Rule editor workflow
+
+1. Open the GitHub Pages editor.
+2. Add domains and URLs to the three lists.
+3. Click **Export Backup JSON**.
+4. Move the JSON file to the jailbroken iPhone if it was created elsewhere.
+5. Open **Settings → SafariBlocker → Import List Backup**.
+6. Select the exported JSON file.
+
+### Enabling GitHub Pages
+
+A workflow is included at:
+
+```text
+.github/workflows/deploy-pages.yml
+```
+
+To publish the editor:
+
+1. Open the repository on GitHub.
+2. Go to **Settings → Pages**.
+3. Set **Build and deployment** to **GitHub Actions**.
+4. Go to **Actions**.
+5. Run **Deploy Rule Editor to GitHub Pages**, or push a change under `docs/`.
+
 ## Settings menu overview
 
 The PreferenceLoader panel currently includes:
@@ -84,6 +131,8 @@ The PreferenceLoader panel currently includes:
 
 ```text
 .github/workflows/build-deb.yml
+.github/workflows/deploy-pages.yml
+docs/
 assets/hex/
 package/
 prefs/
@@ -102,6 +151,8 @@ scripts/rebuild-binaries.sh
   - PreferenceLoader entry that exposes SafariBlocker in Settings.
 - `prefs/`
   - Rebuilt PreferenceLoader bundle source for the enhanced Settings UI.
+- `docs/`
+  - Static GitHub Pages rule editor for creating and importing SafariBlocker backup JSON files.
 - `assets/hex/`
   - Extracted binary payload files stored as hex chunks so the package can be rebuilt from repository contents.
 - `scripts/rebuild-binaries.sh`
@@ -172,7 +223,7 @@ package/var/jb/Library/PreferenceBundles/SafariBlocker.bundle/SafariBlocker
 
 ## Notes
 
-This repository was originally populated from the extracted `com.p2kdev.safariblocker_v1.3.1_iphoneos-arm64.deb` package. The current repository keeps the original rootless package payload structure and adds a rebuilt Settings bundle source under `prefs/` for the enhanced list management, plus-popup entry, and backup/restore features.
+This repository was originally populated from the extracted `com.p2kdev.safariblocker_v1.3.1_iphoneos-arm64.deb` package. The current repository keeps the original rootless package payload structure and adds a rebuilt Settings bundle source under `prefs/` for the enhanced list management, plus-popup entry, backup/restore features, and the `docs/` GitHub Pages rule editor.
 
 ## Credits
 
