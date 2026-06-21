@@ -37,6 +37,29 @@ jobs:
           git clone --depth 1 https://github.com/theos/sdks.git "$HOME/theos/sdks"
           find "$HOME/theos/sdks" -maxdepth 1 -type d -name '*.sdk' -print
 
+      - name: Add Preferences private framework linker stub
+        run: |
+          set -euo pipefail
+          for sdk in "$HOME"/theos/sdks/iPhoneOS*.sdk; do
+            framework_dir="$sdk/System/Library/PrivateFrameworks/Preferences.framework"
+            mkdir -p "$framework_dir"
+            cat > "$framework_dir/Preferences.tbd" <<'EOF'
+--- !tapi-tbd
+            tbd-version: 4
+            targets: [ arm64-ios, arm64e-ios ]
+            install-name: /System/Library/PrivateFrameworks/Preferences.framework/Preferences
+            exports:
+              - targets: [ arm64-ios, arm64e-ios ]
+                symbols:
+                  - _OBJC_CLASS_$_PSListController
+                  - _OBJC_METACLASS_$_PSListController
+                  - _OBJC_CLASS_$_PSSpecifier
+                  - _OBJC_METACLASS_$_PSSpecifier
+...
+EOF
+          done
+          find "$HOME/theos/sdks" -path '*/Preferences.framework/Preferences.tbd' -print
+
       - name: Validate package layout
         run: |
           test -f package/DEBIAN/control
