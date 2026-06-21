@@ -53,6 +53,7 @@ jobs:
               printf '%s\n' '    symbols:'
               printf '%s\n' '      - _OBJC_CLASS_$_PSListController'
               printf '%s\n' '      - _OBJC_METACLASS_$_PSListController'
+              printf '%s\n' '      - _OBJC_IVAR_$_PSListController._specifiers'
               printf '%s\n' '      - _OBJC_CLASS_$_PSSpecifier'
               printf '%s\n' '      - _OBJC_METACLASS_$_PSSpecifier'
               printf '%s\n' '...'
