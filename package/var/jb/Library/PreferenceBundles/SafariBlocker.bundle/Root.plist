@@ -11,13 +11,13 @@
 			<key>default</key>
 			<true/>
 			<key>defaults</key>
-			<string>com.p2kdev.tabblocker</string>
+			<string>com.deerspotter.safariblocker</string>
 			<key>key</key>
 			<string>showBagelMenu</string>
 			<key>label</key>
 			<string>Show Blocked Message</string>
 			<key>PostNotification</key>
-			<string>com.p2kdev.safariblocker.settingschanged</string>
+			<string>com.deerspotter.safariblocker.settingschanged</string>
 		</dict>
 
 		<dict>
@@ -108,18 +108,16 @@
 			<key>label</key>
 			<string>Support</string>
 			<key>footerText</key>
-			<string>Wish to donate? Donation link found on my twitter bio. Please click the above link to visit my twitter profile!</string>
+			<string>Open the DeerSpotter GitHub profile for project updates and related tools.</string>
 		</dict>
 
 		<dict>
 			<key>action</key>
-			<string>visitTwitter</string>
+			<string>visitDeerSpotter</string>
 			<key>cell</key>
 			<string>PSButtonCell</string>
 			<key>label</key>
-			<string>Follow me on Twitter @p2kdev</string>
-			<key>icon</key>
-			<string>twitter.png</string>
+			<string>Open DeerSpotter GitHub</string>
 		</dict>
 
 		<dict>
@@ -128,7 +126,7 @@
 			<key>footerAlignment</key>
 			<integer>1</integer>
 			<key>footerText</key>
-			<string>@2024 P2KDev (@p2kdev)</string>
+			<string>© 2026 DeerSpotter</string>
 		</dict>
 
 	</array>
