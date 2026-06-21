@@ -85,27 +85,59 @@ static NSString *TBTrimmedEntry(NSString *entry) {
     return [entry stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 }
 
-static NSMutableArray<NSString *> *TBEntriesForKey(NSString *key) {
-    id value = [TBMutablePreferences() objectForKey:key];
+static NSArray<NSString *> *TBListPreferenceKeys(void) {
+    return @[@"allowedDomains", @"blockedDomains", @"blockedURLs"];
+}
+
+static NSMutableArray<NSString *> *TBEntriesFromValue(id value) {
     NSMutableArray<NSString *> *entries = [NSMutableArray array];
 
     if ([value isKindOfClass:[NSArray class]]) {
         for (id item in (NSArray *)value) {
             NSString *entry = TBTrimmedEntry(item);
-            if (entry.length > 0) {
+            if (entry.length > 0 && ![entries containsObject:entry]) {
                 [entries addObject:entry];
             }
         }
     } else if ([value isKindOfClass:[NSString class]]) {
         for (NSString *item in [(NSString *)value componentsSeparatedByString:@";"]) {
             NSString *entry = TBTrimmedEntry(item);
-            if (entry.length > 0) {
+            if (entry.length > 0 && ![entries containsObject:entry]) {
                 [entries addObject:entry];
             }
         }
     }
 
     return entries;
+}
+
+static NSMutableArray<NSString *> *TBEntriesForKey(NSString *key) {
+    return TBEntriesFromValue([TBMutablePreferences() objectForKey:key]);
+}
+
+static NSString *TBDateStringForFormat(NSString *format) {
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    formatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"];
+    formatter.dateFormat = format;
+    return [formatter stringFromDate:[NSDate date]];
+}
+
+static NSString *TBBackupDisplayNameForKey(NSString *key) {
+    if ([key isEqualToString:@"allowedDomains"]) {
+        return @"whitelisted domains";
+    }
+    if ([key isEqualToString:@"blockedDomains"]) {
+        return @"blocked domains";
+    }
+    return @"blocked URLs";
+}
+
+static void TBPresentAlert(UIViewController *controller, NSString *title, NSString *message) {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:title
+                                                                   message:message
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+    [controller presentViewController:alert animated:YES completion:nil];
 }
 
 @interface TBGeneralListController : PSListController
@@ -117,7 +149,7 @@ static NSMutableArray<NSString *> *TBEntriesForKey(NSString *key) {
 - (instancetype)initForType:(NSInteger)type;
 @end
 
-@interface TBRootListController : PSListController
+@interface TBRootListController : PSListController <UIDocumentPickerDelegate>
 @end
 
 @implementation TBRootListController
@@ -169,6 +201,122 @@ static NSMutableArray<NSString *> *TBEntriesForKey(NSString *key) {
         [preferences removeObjectForKey:key];
     }
     TBWritePreferences(preferences);
+}
+
+- (NSDictionary *)currentListBackupDictionary {
+    NSMutableDictionary *lists = [NSMutableDictionary dictionary];
+    NSMutableDictionary *preferences = TBMutablePreferences();
+
+    for (NSString *key in TBListPreferenceKeys()) {
+        [lists setObject:TBEntriesFromValue([preferences objectForKey:key]) forKey:key];
+    }
+
+    return @{
+        @"format" : @"SafariBlockerListBackup",
+        @"version" : @1,
+        @"exportedAt" : TBDateStringForFormat(@"yyyy-MM-dd'T'HH:mm:ssZZZZZ"),
+        @"lists" : lists
+    };
+}
+
+- (void)exportListBackup {
+    NSError *error = nil;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:[self currentListBackupDictionary]
+                                                       options:NSJSONWritingPrettyPrinted
+                                                         error:&error];
+    if (!jsonData) {
+        TBPresentAlert(self, @"Export Failed", error.localizedDescription ?: @"Unable to create the backup file.");
+        return;
+    }
+
+    NSString *fileName = [NSString stringWithFormat:@"SafariBlocker-Lists-%@.json", TBDateStringForFormat(@"yyyyMMdd-HHmmss")];
+    NSString *filePath = [NSTemporaryDirectory() stringByAppendingPathComponent:fileName];
+    if (![jsonData writeToFile:filePath options:NSDataWritingAtomic error:&error]) {
+        TBPresentAlert(self, @"Export Failed", error.localizedDescription ?: @"Unable to write the backup file.");
+        return;
+    }
+
+    NSURL *fileURL = [NSURL fileURLWithPath:filePath];
+    UIActivityViewController *activityController = [[UIActivityViewController alloc] initWithActivityItems:@[fileURL]
+                                                                                    applicationActivities:nil];
+    if (activityController.popoverPresentationController) {
+        activityController.popoverPresentationController.sourceView = self.view;
+        activityController.popoverPresentationController.sourceRect = CGRectMake(CGRectGetMidX(self.view.bounds), CGRectGetMidY(self.view.bounds), 1, 1);
+        activityController.popoverPresentationController.permittedArrowDirections = 0;
+    }
+
+    [self presentViewController:activityController animated:YES completion:nil];
+}
+
+- (void)importListBackup {
+    UIDocumentPickerViewController *picker = [[UIDocumentPickerViewController alloc] initWithDocumentTypes:@[@"public.json", @"public.text", @"public.data"]
+                                                                                                    inMode:UIDocumentPickerModeImport];
+    picker.delegate = self;
+    picker.modalPresentationStyle = UIModalPresentationFormSheet;
+    [self presentViewController:picker animated:YES completion:nil];
+}
+
+- (void)documentPicker:(UIDocumentPickerViewController *)controller didPickDocumentsAtURLs:(NSArray<NSURL *> *)urls {
+    NSURL *fileURL = urls.firstObject;
+    if (!fileURL) {
+        return;
+    }
+
+    [self importListBackupFromURL:fileURL];
+}
+
+- (void)documentPickerWasCancelled:(UIDocumentPickerViewController *)controller {
+}
+
+- (void)importListBackupFromURL:(NSURL *)fileURL {
+    BOOL startedAccess = [fileURL startAccessingSecurityScopedResource];
+    NSError *error = nil;
+    NSData *data = [NSData dataWithContentsOfURL:fileURL options:0 error:&error];
+    if (startedAccess) {
+        [fileURL stopAccessingSecurityScopedResource];
+    }
+
+    if (!data) {
+        TBPresentAlert(self, @"Import Failed", error.localizedDescription ?: @"Unable to read the backup file.");
+        return;
+    }
+
+    id jsonObject = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
+    if (![jsonObject isKindOfClass:[NSDictionary class]]) {
+        TBPresentAlert(self, @"Import Failed", @"The selected file is not a SafariBlocker list backup.");
+        return;
+    }
+
+    NSDictionary *backup = (NSDictionary *)jsonObject;
+    id listsObject = [backup objectForKey:@"lists"];
+    NSDictionary *lists = [listsObject isKindOfClass:[NSDictionary class]] ? (NSDictionary *)listsObject : backup;
+    NSMutableDictionary *preferences = TBMutablePreferences();
+    NSMutableArray<NSString *> *summaryLines = [NSMutableArray array];
+    BOOL importedAnyList = NO;
+
+    for (NSString *key in TBListPreferenceKeys()) {
+        id value = [lists objectForKey:key];
+        if (!value || value == [NSNull null]) {
+            continue;
+        }
+
+        NSMutableArray<NSString *> *entries = TBEntriesFromValue(value);
+        [preferences setObject:[entries componentsJoinedByString:@";"] forKey:key];
+        [summaryLines addObject:[NSString stringWithFormat:@"%lu %@", (unsigned long)entries.count, TBBackupDisplayNameForKey(key)]];
+        importedAnyList = YES;
+    }
+
+    if (!importedAnyList) {
+        TBPresentAlert(self, @"Import Failed", @"The backup file did not contain allowedDomains, blockedDomains, or blockedURLs.");
+        return;
+    }
+
+    TBWritePreferences(preferences);
+    _specifiers = nil;
+    [self reloadSpecifiers];
+
+    NSString *message = [NSString stringWithFormat:@"Imported %@.", [summaryLines componentsJoinedByString:@", "]];
+    TBPresentAlert(self, @"Import Complete", message);
 }
 
 - (void)visitTwitter {
