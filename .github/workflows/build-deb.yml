@@ -14,21 +14,47 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          set -euo pipefail
+          brew update
+          brew install make ldid dpkg xz
+          echo "/opt/homebrew/opt/make/libexec/gnubin" >> "$GITHUB_PATH"
+          echo "/usr/local/opt/make/libexec/gnubin" >> "$GITHUB_PATH"
+
+      - name: Install Theos and iOS SDKs
+        run: |
+          set -euo pipefail
+          git clone --recursive --depth 1 --shallow-submodules https://github.com/theos/theos.git "$HOME/theos"
+          git clone --depth 1 https://github.com/theos/sdks.git "$HOME/theos/sdks"
 
       - name: Validate package layout
         run: |
           test -f package/DEBIAN/control
           test -d package/var/jb
           test -d assets/hex
+          test -f prefs/Makefile
+          test -f prefs/TBRootListController.m
           find package -type f | sort
 
       - name: Restore binary payload files
         run: scripts/rebuild-binaries.sh package
+
+      - name: Build preference bundle with plus popup UI
+        run: |
+          set -euo pipefail
+          export THEOS="$HOME/theos"
+          make -C prefs clean stage
+          PREF_BINARY="prefs/.theos/_/var/jb/Library/PreferenceBundles/SafariBlocker.bundle/SafariBlocker"
+          test -f "$PREF_BINARY"
+          cp "$PREF_BINARY" package/var/jb/Library/PreferenceBundles/SafariBlocker.bundle/SafariBlocker
+          file package/var/jb/Library/PreferenceBundles/SafariBlocker.bundle/SafariBlocker
 
       - name: Build deb package
         run: |
@@ -40,7 +66,7 @@ jobs:
           ARCH=$(awk -F': ' '/^Architecture:/{print $2}' package/DEBIAN/control)
           OUT="dist/com.p2kdev.safariblocker_v${VERSION}_${ARCH}.deb"
           dpkg-deb --root-owner-group --build package "$OUT"
-          sha256sum "$OUT" | tee dist/SHA256SUMS
+          shasum -a 256 "$OUT" | tee dist/SHA256SUMS
 
       - name: Upload deb artifact
         uses: actions/upload-artifact@v4
