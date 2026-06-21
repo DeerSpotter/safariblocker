@@ -73,13 +73,15 @@ Hosted page after GitHub Pages is enabled:
 
 The editor can:
 
-- Add whitelisted domains.
-- Add blocked domains.
-- Add blocked full URLs.
 - Import an existing SafariBlocker backup JSON file.
-- Paste an existing backup JSON object directly into the page.
+- Show imported whitelisted domains, blocked domains, and blocked URLs as visible rows.
+- Add one entry with a **+** popup that has **Submit** and **Cancel** controls.
+- Batch paste newline or semicolon separated lists into any category.
+- Copy any single list as clean newline separated text for reuse elsewhere.
+- Swipe a row left on mobile to reveal **Delete**.
 - Delete entries from each list.
 - Sort each list.
+- Paste an existing backup JSON object directly into the page.
 - Copy the generated JSON.
 - Export a `SafariBlockerBackup_YYYY-MM-DD.json` file.
 
@@ -88,11 +90,16 @@ The editor is fully static and runs locally in the browser. No rules are uploade
 ### Rule editor workflow
 
 1. Open the GitHub Pages editor.
-2. Add domains and URLs to the three lists.
-3. Click **Export Backup JSON**.
-4. Move the JSON file to the jailbroken iPhone if it was created elsewhere.
-5. Open **Settings → SafariBlocker → Import List Backup**.
-6. Select the exported JSON file.
+2. Import an existing SafariBlocker backup JSON, paste a backup JSON object, or start from empty lists.
+3. Review the rendered rows for each category.
+4. Press **+** to add a single domain or URL.
+5. Press **Batch Paste** to paste many domains or URLs at once.
+6. Swipe left on a row and press **Delete** to remove an entry.
+7. Press **Copy List** to copy only that category as a plain newline list.
+8. Click **Export Backup JSON**.
+9. Move the JSON file to the jailbroken iPhone if it was created elsewhere.
+10. Open **Settings → SafariBlocker → Import List Backup**.
+11. Select the exported JSON file.
 
 ### Enabling GitHub Pages
 
