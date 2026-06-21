@@ -93,7 +93,7 @@ jobs:
           chmod 0644 package/DEBIAN/control
           VERSION=$(awk -F': ' '/^Version:/{print $2}' package/DEBIAN/control)
           ARCH=$(awk -F': ' '/^Architecture:/{print $2}' package/DEBIAN/control)
-          OUT="dist/com.p2kdev.safariblocker_v${VERSION}_${ARCH}.deb"
+          OUT="dist/com.deerspotter.safariblocker_v${VERSION}_${ARCH}.deb"
           dpkg-deb --root-owner-group --build package "$OUT"
           shasum -a 256 "$OUT" | tee dist/SHA256SUMS
 
