@@ -81,6 +81,31 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
+			<string>Backup and Restore</string>
+			<key>footerText</key>
+			<string>Export saves whitelisted domains, blocked domains, and blocked URLs to one JSON backup file. Import restores those three lists from a SafariBlocker backup file.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Export List Backup</string>
+			<key>action</key>
+			<string>exportListBackup</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Import List Backup</string>
+			<key>action</key>
+			<string>importListBackup</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
 			<string>Support</string>
 			<key>footerText</key>
 			<string>Wish to donate? Donation link found on my twitter bio. Please click the above link to visit my twitter profile!</string>
