@@ -26,7 +26,7 @@
 			<key>label</key>
 			<string>Whitelisted Domains</string>
 			<key>footerText</key>
-			<string>Tap Specify Whitelisted Domains to manage saved entries, or use Manual Whitelisted Domains to type entries directly. Separate multiple domains with semicolons.</string>
+			<string>Tap Specify Whitelisted Domains, then press + to manually add a domain. Submit saves it, Cancel closes the popup.</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -38,20 +38,6 @@
 			<key>action</key>
 			<string>launchAllowedDomainOptions</string>
 		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSEditTextCell</string>
-			<key>defaults</key>
-			<string>com.p2kdev.safariblocker</string>
-			<key>key</key>
-			<string>allowedDomains</string>
-			<key>label</key>
-			<string>Manual Whitelisted Domains</string>
-			<key>placeholder</key>
-			<string>example.com;example.org</string>
-			<key>PostNotification</key>
-			<string>com.p2kdev.safariblocker.settingschanged</string>
-		</dict>
 
 		<dict>
 			<key>cell</key>
@@ -59,7 +45,7 @@
 			<key>label</key>
 			<string>Blocked Domains</string>
 			<key>footerText</key>
-			<string>Tap Specify Blocked Domains to manage saved entries, or use Manual Blocked Domains to type entries directly. Separate multiple domains with semicolons.</string>
+			<string>Tap Specify Blocked Domains, then press + to manually add a domain. Submit saves it, Cancel closes the popup.</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -71,20 +57,6 @@
 			<key>action</key>
 			<string>launchBlockedDomainOptions</string>
 		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSEditTextCell</string>
-			<key>defaults</key>
-			<string>com.p2kdev.safariblocker</string>
-			<key>key</key>
-			<string>blockedDomains</string>
-			<key>label</key>
-			<string>Manual Blocked Domains</string>
-			<key>placeholder</key>
-			<string>example.com;example.org</string>
-			<key>PostNotification</key>
-			<string>com.p2kdev.safariblocker.settingschanged</string>
-		</dict>
 
 		<dict>
 			<key>cell</key>
@@ -92,7 +64,7 @@
 			<key>label</key>
 			<string>Blocked URLs</string>
 			<key>footerText</key>
-			<string>Tap Specify Blocked URLs to manage saved entries, or use Manual Blocked URLs to type entries directly. Separate multiple URLs with semicolons.</string>
+			<string>Tap Specify Blocked URLs, then press + to manually add a URL. Submit saves it, Cancel closes the popup.</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -103,20 +75,6 @@
 			<string>Specify Blocked URLs...</string>
 			<key>action</key>
 			<string>launchBlockedURLOptions</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSEditTextCell</string>
-			<key>defaults</key>
-			<string>com.p2kdev.safariblocker</string>
-			<key>key</key>
-			<string>blockedURLs</string>
-			<key>label</key>
-			<string>Manual Blocked URLs</string>
-			<key>placeholder</key>
-			<string>https://example.com/path;https://example.org/page</string>
-			<key>PostNotification</key>
-			<string>com.p2kdev.safariblocker.settingschanged</string>
 		</dict>
 
 		<dict>
