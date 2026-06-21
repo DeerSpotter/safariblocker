@@ -113,11 +113,11 @@
 
 		<dict>
 			<key>cell</key>
-			<string>PSLinkCell</string>
+			<string>PSButtonCell</string>
 			<key>label</key>
 			<string>Open DeerSpotter GitHub</string>
-			<key>url</key>
-			<string>https://github.com/DeerSpotter/safariblocker</string>
+			<key>action</key>
+			<string>visitTwitter</string>
 		</dict>
 
 		<dict>
