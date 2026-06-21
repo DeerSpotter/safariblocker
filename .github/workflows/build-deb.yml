@@ -36,8 +36,11 @@ jobs:
           mkdir -p dist
           chmod 0755 package/DEBIAN
           chmod 0644 package/DEBIAN/control
-          dpkg-deb --root-owner-group --build package dist/com.p2kdev.safariblocker_v1.3.1_iphoneos-arm64.deb
-          sha256sum dist/com.p2kdev.safariblocker_v1.3.1_iphoneos-arm64.deb | tee dist/SHA256SUMS
+          VERSION=$(awk -F': ' '/^Version:/{print $2}' package/DEBIAN/control)
+          ARCH=$(awk -F': ' '/^Architecture:/{print $2}' package/DEBIAN/control)
+          OUT="dist/com.p2kdev.safariblocker_v${VERSION}_${ARCH}.deb"
+          dpkg-deb --root-owner-group --build package "$OUT"
+          sha256sum "$OUT" | tee dist/SHA256SUMS
 
       - name: Upload deb artifact
         uses: actions/upload-artifact@v4
