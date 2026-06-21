@@ -33,6 +33,12 @@ jobs:
           mkdir .unpack_repo_source
           unzip -o "$ZIP" -d .unpack_repo_source
 
+          # GitHub's default Actions token can commit normal repo files,
+          # but it cannot create or update workflow files unless it has
+          # explicit workflows permission. Leave workflow files to be added
+          # by a user or by the GitHub connector instead.
+          rm -rf .unpack_repo_source/.github/workflows
+
           shopt -s dotglob
           cp -R .unpack_repo_source/* ./
           rm -rf .unpack_repo_source
